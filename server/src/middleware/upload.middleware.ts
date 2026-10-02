@@ -2,11 +2,17 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-const uploadDir = path.resolve(process.env.UPLOAD_DIR || 'uploads');
+const uploadDir = path.resolve(
+  process.env.UPLOAD_DIR || (process.env.VERCEL ? '/tmp/uploads' : 'uploads')
+);
 
-// Ensure directory exists
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Ensure directory exists safely
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn('Notice: Upload directory could not be created directly (normal in serverless):', err);
 }
 
 const storage = multer.diskStorage({

@@ -43,7 +43,12 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, curl, or Postman)
-      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        process.env.NODE_ENV !== 'production'
+      ) {
         callback(null, true);
       } else {
         callback(new Error('CORS not allowed from this origin'));
@@ -73,9 +78,13 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static directory for file uploads
-const uploadDir = path.resolve(process.env.UPLOAD_DIR || 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+const uploadDir = path.resolve(process.env.UPLOAD_DIR || (process.env.VERCEL ? '/tmp/uploads' : 'uploads'));
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn('Notice: Upload directory could not be created directly (normal in serverless):', err);
 }
 app.use('/uploads', express.static(uploadDir));
 
@@ -120,8 +129,8 @@ if (clientDistPath) {
 // Centralized Error Handling
 app.use(errorHandler);
 
-// Start server if not running in Jest test runner
-if (process.env.NODE_ENV !== 'test' && process.env.JEST_WORKER_ID === undefined) {
+// Start server if not running in Jest test runner or Vercel Serverless
+if (process.env.NODE_ENV !== 'test' && process.env.JEST_WORKER_ID === undefined && !process.env.VERCEL) {
   app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`🌿 EcoCollect API server listening on 0.0.0.0:${PORT}`);
     console.log(`🚀 Mode: ${process.env.NODE_ENV || 'development'}`);

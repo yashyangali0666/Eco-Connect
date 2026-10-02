@@ -10,6 +10,7 @@
     "build:server": "npm run build --prefix server",
     "build:client": "npm run build --prefix client",
     "build": "npm run build:server && npm run build:client",
+    "vercel-build": "cd client && npm install && npm run build",
     "start": "npm run start --prefix server",
     "test": "npm run test --prefix server"
   },

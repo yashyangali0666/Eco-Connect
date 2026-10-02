@@ -348,6 +348,52 @@ docker run -p 8080:8080 -e DATABASE_URL="your-postgres-url" -e JWT_SECRET="your-
 
 ---
 
+## ▲ Deploying to Vercel
+
+The repository is configured for direct deployment on [Vercel](https://vercel.com) with root `vercel.json`, client SPA rewrites (`client/vercel.json`), and serverless API integration.
+
+### Step 1: Provision a Free Cloud PostgreSQL Database
+> **Important**: Vercel functions execute in the cloud and cannot connect to your local `localhost:5432` database. You will need a cloud PostgreSQL database.
+
+Choose any free cloud provider:
+- **[Neon](https://neon.tech)** *(Recommended)*: Free tier, instant provisioning, native connection pooling.
+- **[Supabase](https://supabase.com)**: Free tier PostgreSQL with connection pooling.
+- **Vercel Postgres**: Available directly inside the Vercel dashboard.
+
+Copy your database connection string, for example:
+```
+postgresql://username:password@ep-green-sample-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
+```
+
+### Step 2: Push Schema & Seed Data to the Cloud Database
+From your local terminal, point Prisma to your cloud database URL to create tables and seed demo accounts:
+```bash
+cd server
+
+# Apply database schema
+DATABASE_URL="your-cloud-postgres-url" npx prisma db push
+
+# Seed demo users, categories, and sample requests
+DATABASE_URL="your-cloud-postgres-url" npx prisma db seed
+cd ..
+```
+
+### Step 3: Deploy on Vercel
+1. Log in to [Vercel](https://vercel.com) and click **"Add New"** > **"Project"**.
+2. Select your repository: **`yashyangali0666/Eco-Connect`**.
+3. Under **Environment Variables**, configure:
+   | Variable | Value | Description |
+   |---|---|---|
+   | `DATABASE_URL` | `postgresql://...` | Your cloud PostgreSQL connection string |
+   | `JWT_SECRET` | `your_super_secret_jwt_key_2026` | Secret key for signing JWT auth tokens |
+   | `NODE_ENV` | `production` | Production environment flag |
+4. Click **Deploy**.
+   - Vercel automatically runs `npm run vercel-build` to package the Vite React client into `client/dist`.
+   - The Express REST API is accessible under `/api/*` via Vercel Serverless Functions.
+   - Client routing (e.g. `/dashboard`, `/schedule`, `/admin`) is handled seamlessly without 404s.
+
+---
+
 ## ☁️ Production Deployment to Google Cloud Run
 
 EcoCollect is fully containerized and cloud-native, ready for 1-click serverless deployment on Google Cloud Run with Google Cloud SQL.
