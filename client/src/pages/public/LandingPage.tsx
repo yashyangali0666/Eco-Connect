@@ -258,7 +258,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* 2. REAL-TIME STATS BANNER */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="impact" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 sm:p-8 rounded-3xl bg-white dark:bg-charcoal-900 border border-slate-200 dark:border-charcoal-800 shadow-sm">
           <div className="text-center p-3">
             <p className="text-3xl sm:text-4xl font-extrabold text-brand-600 dark:text-brand-400 tracking-tight">
@@ -451,7 +451,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* 5. HOW IT WORKS TIMELINE */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section id="how-it-works" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 scroll-mt-24">
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
             Simple 4-Step Workflow
