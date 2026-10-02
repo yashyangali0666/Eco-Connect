@@ -37,7 +37,10 @@ export const LoginPage: React.FC = () => {
         navigate('/dashboard');
       }
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Invalid credentials provided';
+      const message =
+        err.response?.data?.errors?.[0]?.message ||
+        err.response?.data?.message ||
+        'Invalid credentials provided';
       error('Login Failed', message);
     } finally {
       setIsLoading(false);

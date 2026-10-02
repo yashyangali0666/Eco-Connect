@@ -29,8 +29,8 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
-    if (formData.password.length < 8) {
-      error('Password too short', 'Password must be at least 8 characters long.');
+    if (formData.password.length < 6) {
+      error('Password too short', 'Password must be at least 6 characters long.');
       return;
     }
 
@@ -41,7 +41,9 @@ export const RegisterPage: React.FC = () => {
       navigate('/dashboard');
     } catch (err: any) {
       const message =
-        err.response?.data?.message || err.response?.data?.errors?.[0]?.message || 'Registration failed';
+        err.response?.data?.errors?.[0]?.message ||
+        err.response?.data?.message ||
+        'Registration failed. Please check your details.';
       error('Registration Error', message);
     } finally {
       setIsLoading(false);
@@ -126,7 +128,7 @@ export const RegisterPage: React.FC = () => {
           {/* Password */}
           <div className="space-y-1">
             <label className="text-xs font-semibold text-charcoal-700 dark:text-slate-300">
-              Password (min 8 chars, 1 uppercase, 1 number) *
+              Password (min 6 characters) *
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
