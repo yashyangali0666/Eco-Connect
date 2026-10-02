@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken, TokenPayload } from '../utils/jwt';
 import prisma from '../prisma';
 import { Role } from '@prisma/client';
+import { fallbackStore } from '../services/fallbackStore.service';
 
 export interface AuthenticatedUser {
   id: string;
@@ -48,20 +49,29 @@ export async function authenticate(
       return;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        phone: true,
-        avatar: true,
-        isActive: true,
-      },
-    });
+    let user: any = null;
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          phone: true,
+          avatar: true,
+          isActive: true,
+        },
+      });
+    } catch (dbErr) {
+      user = fallbackStore.findUserById(payload.userId);
+    }
 
-    if (!user || !user.isActive) {
+    if (!user) {
+      user = fallbackStore.findUserById(payload.userId);
+    }
+
+    if (!user || user.isActive === false) {
       res.status(401).json({
         success: false,
         message: 'User account not found or deactivated',

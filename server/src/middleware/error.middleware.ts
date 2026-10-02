@@ -15,9 +15,11 @@ export function errorHandler(
       message: e.message,
     }));
 
+    const specificMessage = formattedErrors[0]?.message || 'Validation failed';
+
     res.status(422).json({
       success: false,
-      message: 'Validation failed',
+      message: specificMessage,
       errors: formattedErrors,
     });
     return;
