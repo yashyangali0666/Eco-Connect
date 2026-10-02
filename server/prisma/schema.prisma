@@ -1,0 +1,182 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  STAFF
+  ADMIN
+}
+
+enum RequestStatus {
+  PENDING
+  CONFIRMED
+  ASSIGNED
+  OUT_FOR_PICKUP
+  COLLECTED
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+model User {
+  id               String                 @id @default(uuid())
+  name             String
+  email            String                 @unique
+  phone            String?
+  passwordHash     String
+  role             Role                   @default(USER)
+  avatar           String?
+  isActive         Boolean                @default(true)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  pickupRequests   PickupRequest[]        @relation("UserRequests")
+  assignedPickups  PickupRequest[]        @relation("StaffAssignedRequests")
+  staffProfile     CollectionStaffProfile?
+  notifications    Notification[]
+  activityLogs     ActivityLog[]
+  comments         Comment[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model CollectionStaffProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  vehicleType   String?
+  vehicleNumber String?
+  serviceArea   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WasteCategory {
+  id                   String          @id @default(uuid())
+  name                 String          @unique
+  slug                 String          @unique
+  description          String
+  icon                 String
+  imageUrl             String?
+  acceptedItems        String[]
+  rejectedItems        String[]
+  disposalInstructions String
+  color                String?         @default("#10B981")
+  isActive             Boolean         @default(true)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  pickupRequests       PickupRequest[]
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model PickupRequest {
+  id              String        @id @default(uuid())
+  requestNumber   String        @unique
+  userId          String
+  wasteCategoryId String
+  quantity        Float
+  unit            String        @default("kg")
+  description     String?
+  pickupAddress   String
+  city            String
+  state           String
+  postalCode      String
+  landmark        String?
+  latitude        Float?
+  longitude       Float?
+  pickupDate      DateTime
+  timeSlot        String
+  status          RequestStatus @default(PENDING)
+  assignedStaffId String?
+  adminNotes      String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  completedAt     DateTime?
+
+  user            User          @relation("UserRequests", fields: [userId], references: [id], onDelete: Cascade)
+  wasteCategory   WasteCategory @relation(fields: [wasteCategoryId], references: [id])
+  assignedStaff   User?         @relation("StaffAssignedRequests", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+
+  images          PickupImage[]
+  notifications   Notification[]
+  activityLogs    ActivityLog[]
+  comments        Comment[]
+
+  @@index([requestNumber])
+  @@index([userId])
+  @@index([status])
+  @@index([wasteCategoryId])
+  @@index([pickupDate])
+  @@index([assignedStaffId])
+  @@index([createdAt])
+}
+
+model PickupImage {
+  id              String        @id @default(uuid())
+  pickupRequestId String
+  url             String
+  filename        String
+  createdAt       DateTime      @default(now())
+
+  pickupRequest   PickupRequest @relation(fields: [pickupRequestId], references: [id], onDelete: Cascade)
+
+  @@index([pickupRequestId])
+}
+
+model Notification {
+  id              String         @id @default(uuid())
+  userId          String
+  pickupRequestId String?
+  title           String
+  message         String
+  type            String         @default("INFO")
+  isRead          Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pickupRequest   PickupRequest? @relation(fields: [pickupRequestId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model ActivityLog {
+  id              String        @id @default(uuid())
+  pickupRequestId String
+  userId          String?
+  action          String
+  description     String
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+
+  pickupRequest   PickupRequest @relation(fields: [pickupRequestId], references: [id], onDelete: Cascade)
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([pickupRequestId])
+  @@index([createdAt])
+}
+
+model Comment {
+  id              String        @id @default(uuid())
+  pickupRequestId String
+  userId          String
+  comment         String
+  createdAt       DateTime      @default(now())
+
+  pickupRequest   PickupRequest @relation(fields: [pickupRequestId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([pickupRequestId])
+}

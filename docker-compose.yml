@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecocollect_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: adminpassword
+      POSTGRES_DB: ecocollect
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecocollect"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecocollect_app
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://postgres:adminpassword@postgres:5432/ecocollect?schema=public"
+      JWT_SECRET: "ecocollect_production_docker_jwt_key_2026_clean_planet"
+      JWT_EXPIRES_IN: "7d"
+      STORAGE_PROVIDER: "local"
+      UPLOAD_DIR: "/app/uploads"
+    volumes:
+      - uploads_data:/app/uploads
+
+volumes:
+  pgdata:
+  uploads_data:
